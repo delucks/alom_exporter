@@ -18,6 +18,8 @@ header_to_category = {
     'Current sensors': 'current',
     'Current sensor information': 'current',
     'Power Supplies': 'psu',
+    'Disk Status information': 'disk',
+    'System Disks': 'disk',
 }
 
 # Non-numeric table values are mapped to floats with this dictionary.
@@ -78,18 +80,12 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
         iterator += 1
     return parsed, iterator
 
-def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, int):
-    '''Parse a "System Indicator Status" table into a dict mapping indicator IDs to states.
-    Return the new index of the iterator along with the resulting data.
-    '''
-    parsed = {}
-    iterator = start_index
+def _parse_indicator_row(header_line: str, values_line: str) -> dict:
+    result = {}
     # Column values can be separated by spaces so we need to find the start index of each column
     indexes = []
-    header_line = lines[iterator+2]
     for header in header_line.split():
         indexes.append(header_line.index(header))
-    values_line = lines[iterator+3] 
     # Manually space and trim each value with the indexes of the headers
     values = [
         values_line[0:indexes[1]].strip(),
@@ -97,8 +93,30 @@ def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, 
         values_line[indexes[2]:].strip(),
     ]
     for idx, hdr in enumerate(header_line.split()):
-        parsed[hdr] = values[idx]
-    return parsed, iterator+3
+        result[hdr] = values[idx]
+    return result
+
+def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, int):
+    '''Parse a "System Indicator Status" table into a dict mapping indicator IDs to states.
+    Return the new index of the iterator along with the resulting data.
+    '''
+    iterator = start_index+2  # Skip table header and first divider
+    # First table always exists, and in some cases there are additional tables
+    result = _parse_indicator_row(lines[iterator], lines[iterator+1])
+    iterator += 2  # Skip first table
+    while iterator < len(lines):
+        # An empty line means we've hit the end of this table
+        if lines[iterator] == '' or lines[iterator+1] == '':
+            break
+        # A divider followed by a capital letter in first position means we've found another row
+        if lines[iterator].startswith('----') and re.search('^[A-Z]', lines[iterator+1]):
+            iterator += 1
+            # Merge in additional rows
+            next_row = _parse_indicator_row(lines[iterator], lines[iterator+1])
+            for k, v in next_row.items():
+                result[k] = v
+            iterator += 2  # Skip this table
+    return result, iterator
 
 def parse_showenvironment(lines: List[str]) -> dict:
     result = defaultdict(dict)
