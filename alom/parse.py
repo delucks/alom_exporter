@@ -28,7 +28,7 @@ header_to_category = {
 custom_table_values = {
     'OFF': 0.0,
     'OK': 1.0,
-    'NOT PRESENT': 0.0,
+    'NOT PRESENT': -1.0,
     '--': -1.0,
 }
 
