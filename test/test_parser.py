@@ -21,9 +21,9 @@ def test_t1000_on_0(sample_session):
     assert result['temperature']['MB/CMP0/T_BCORE']['Temp'] == 37
     assert result['temperature']['MB/IOB/T_CORE']['Temp'] == 37
     # Indicators
-    assert result['indicator']['SYS/LOCATE'] == 0
-    assert result['indicator']['SYS/SERVICE'] == 0
-    assert result['indicator']['SYS/ACT'] == 1
+    assert result['indicator']['SYS/LOCATE'] == 'OFF'
+    assert result['indicator']['SYS/SERVICE'] == 'OFF'
+    assert result['indicator']['SYS/ACT'] == 'ON'
     # Fans
     assert result['power']['fans'] == 1
     assert result['fans']['FT0/F0']['Speed'] == 8967
@@ -62,9 +62,9 @@ def test_t1000_on_1(sample_session):
     assert result['temperature']['MB/CMP0/T_BCORE']['Temp'] == 38
     assert result['temperature']['MB/IOB/T_CORE']['Temp'] == 37
     # Indicators
-    assert result['indicator']['SYS/LOCATE'] == 0
-    assert result['indicator']['SYS/SERVICE'] == 0
-    assert result['indicator']['SYS/ACT'] == 1
+    assert result['indicator']['SYS/LOCATE'] == 'OFF'
+    assert result['indicator']['SYS/SERVICE'] == 'OFF'
+    assert result['indicator']['SYS/ACT'] == 'ON'
     # Fans
     assert result['power']['fans'] == 1
     assert result['fans']['FT0/F0']['Speed'] == 8967
@@ -103,9 +103,9 @@ def test_t1000_on_docs_example(sample_session):
     assert result['temperature']['MB/CMP0/T_BCORE']['Temp'] == 42
     assert result['temperature']['MB/IOB/T_CORE']['Temp'] == 36
     # Indicators
-    assert result['indicator']['SYS/LOCATE'] == 0
-    assert result['indicator']['SYS/SERVICE'] == 0
-    assert result['indicator']['SYS/ACT'] == 1
+    assert result['indicator']['SYS/LOCATE'] == 'OFF'
+    assert result['indicator']['SYS/SERVICE'] == 'OFF'
+    assert result['indicator']['SYS/ACT'] == 'ON'
     # Fans
     assert result['power']['fans'] == 1
     assert result['fans']['FT0/F0']['Speed'] == 6653
@@ -130,5 +130,27 @@ def test_t1000_on_docs_example(sample_session):
     assert result['load']['MB/I_VMEM']['Load'] == 1.74
     # Current
     assert result['current']['MB/BAT/V_BAT']['Status'] == 1
+    # Power supplies
+    assert result['psu']['PS0']['Status'] == 1
+
+def test_t1000_off(sample_session):
+    test = sample_session('test/t1000_off.txt')
+    result = parse_showenvironment(test)
+    # Temperature block
+    assert result['power']['temperature'] == 1
+    assert result['temperature']['MB/T_AMB']['Status'] == 1
+    assert result['temperature']['MB/T_AMB']['Temp'] == 25
+    # Indicators
+    assert result['indicator']['SYS/LOCATE'] == 'FAST BLINK'
+    assert result['indicator']['SYS/SERVICE'] == 'OFF'
+    assert result['indicator']['SYS/ACT'] == 'STANDBY BLINK'
+    # Fans
+    assert result['power']['fans'] == 0
+    # Voltage
+    assert result['power']['voltage'] == 0
+    # Load
+    assert result['power']['load'] == 0
+    # Current
+    assert result['power']['current'] == 0
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1

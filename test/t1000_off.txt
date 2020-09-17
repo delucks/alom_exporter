@@ -15,7 +15,7 @@ MB/T_AMB         OK        25    -10      -5       0      45       50       55
 System Indicator Status:
 --------------------------------------------------------
 SYS/LOCATE           SYS/SERVICE          SYS/ACT
-OFF                  OFF                  STANDBY BLINK
+FAST BLINK           OFF                  STANDBY BLINK
 --------------------------------------------------------
 
 

@@ -25,6 +25,7 @@ header_to_category = {
 custom_table_values = {
     'OFF': 0.0,
     'OK': 1.0,
+    'STANDBY/BLINK': 1.0,
 }
 
 def atoi(table_data: str) -> float:
@@ -77,6 +78,28 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
         iterator += 1
     return parsed, iterator
 
+def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, int):
+    '''Parse a "System Indicator Status" table into a dict mapping indicator IDs to states.
+    Return the new index of the iterator along with the resulting data.
+    '''
+    parsed = {}
+    iterator = start_index
+    # Column values can be separated by spaces so we need to find the start index of each column
+    indexes = []
+    header_line = lines[iterator+2]
+    for header in header_line.split():
+        indexes.append(header_line.index(header))
+    values_line = lines[iterator+3] 
+    # Manually space and trim each value with the indexes of the headers
+    values = [
+        values_line[0:indexes[1]].strip(),
+        values_line[indexes[1]:indexes[2]].strip(),
+        values_line[indexes[2]:].strip(),
+    ]
+    for idx, hdr in enumerate(header_line.split()):
+        parsed[hdr] = values[idx]
+    return parsed, iterator+3
+
 def parse_showenvironment(lines: List[str]) -> dict:
     result = defaultdict(dict)
     result['power']['system'] = 1  # Assume power on until we hit a "System power is off" line
@@ -89,11 +112,9 @@ def parse_showenvironment(lines: List[str]) -> dict:
             #print(f'Header: {header}')
             # Special case- several boolean columns with no divider
             if header == 'System Indicator Status':
-                col_headers = lines[iterator+2].split()
-                col_values = lines[iterator+3].split()
-                for idx, hdr in enumerate(col_headers):
-                    result['indicator'][hdr] = 0 if col_values[idx] == 'OFF' else 1
-                iterator += 3 # skip the table body
+                indicators, new_index = parse_system_indicator_status(lines, iterator)
+                result['indicator'] = indicators
+                iterator = new_index
                 continue
             # The rest are all proper tables
             table, new_index = parse_table(lines, iterator)
