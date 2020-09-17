@@ -1,0 +1,41 @@
+ 
+ 
+=============== Environmental Status ===============
+ 
+ 
+------------------------------------------------------------------------------
+System Temperatures (Temperatures in Celsius):
+------------------------------------------------------------------------------
+Sensor           Status  Temp LowHard LowSoft LowWarn HighWarn HighSoft HighHard
+------------------------------------------------------------------------------
+CPU temperature information cannot be displayed when System power is off.
+PDB/T_AMB        OK        24    -10      -5       0      45       50      55
+ 
+--------------------------------------------------------
+System Indicator Status:
+--------------------------------------------------------
+SYS/LOCATE           SYS/SERVICE          SYS/ACT
+OFF                  OFF                  STANDBY BLINK
+--------------------------------------------------------
+SYS/REAR_FAULT       SYS/TEMP_FAULT       SYS/TOP_FAN_FAULT
+OFF                  OFF                  OFF
+--------------------------------------------------------
+ 
+ 
+Disk Status information cannot be displayed when System power is off.
+ 
+Fan Status information cannot be displayed when System power is off.
+ 
+Voltage Rail Status information cannot be displayed when System power is off.
+ 
+System Load information cannot be displayed when System power is off.
+ 
+Current sensor information cannot be displayed when System power is off.
+ 
+------------------------------------------------------------------------------
+Power Supplies:
+------------------------------------------------------------------------------
+Supply  Status          Underspeed  Overtemp  Overvolt  Undervolt  Overcurrent
+------------------------------------------------------------------------------
+PS0     OK              OFF         OFF       OFF       OFF        OFF
+PS1     OK              OFF         OFF       OFF       OFF        OFF
