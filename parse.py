@@ -36,19 +36,33 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
     '''Parse a full table from environmental status report, starting with the header.
     Return the table as a nested mapping with the first column (sensor name) as the key for
     each row's values. Also track & return the line count read to avoid double parsing.
+
+    Parameters:
+        lines: Full contents of environmental status
+        start_index: Index of table header
     '''
-    header = lines[start_index].split()
     parsed = defaultdict(dict)
-    iterator = start_index+2  # Skip --- header line
+    # Find column header line: next line starting with a capital alphanum after start_index
+    iterator = start_index+1
     line = lines[iterator]
-    while line != "" and not line.startswith('---'):  # End of a status table is a bare newline
-        # Status tables occasionally include some records when power is off
+    while not re.search('^[A-Z]', line):
+        iterator += 1
+        line = lines[iterator]
+    header = line.split()
+    # There is always a divider line after the header, so we can skip that safely
+    iterator += 2
+    while iterator < len(lines):
+        line = lines[iterator]
+        if line == "" or line.startswith('----'):
+            # This indicates the end of the table- a blank newline or in some cases a final divider
+            break
         if 'cannot be displayed when System power is off' in line:
+            # Status tables occasionally include some records when power is off.
+            # These records are informative only for our purposes so are skipped.
             iterator += 1
-            line = lines[iterator]
             continue
         data = line.split()
-        #print(header, data, line)
+        print(f'{header}\t{iterator}\n{data}')
         for idx, hdr in enumerate(header):
             # Skip first column which describes the (sensor/supply ID) key
             if idx == 0:
@@ -56,7 +70,6 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
             # Use first column as the key for this data
             parsed[data[0]][hdr] = atoi(data[idx])
         iterator += 1
-        line = lines[iterator]
     return parsed, iterator
 
 '''
@@ -95,7 +108,7 @@ ilom_power_supply_status = bool "Status of power supplies"
 '''
 
 with open(sys.argv[1]) as f:
-    lines = f.read().splitlines()
+    lines = [line.strip() for line in f.read().splitlines()]
 
 result = defaultdict(dict)
 result['power']['system'] = 1  # Assume power on until we hit a "System power is off" line
@@ -115,10 +128,10 @@ while iterator < len(lines):
             iterator += 3 # skip the table body
             continue
         # The rest are all proper tables
-        table, new_index = parse_table(lines, iterator+2)
+        table, new_index = parse_table(lines, iterator)
         result[header_to_category[header]] = table
         result['power'][header_to_category[header]] = 1
-        iterator = new_index
+        iterator = new_index  # This is the end of the table and should still be incremented below
     elif 'cannot be displayed when System power is off' in line:
         result['power']['system'] = 0
         header = ' '.join(line.split()[:3])
