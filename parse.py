@@ -72,71 +72,34 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
         iterator += 1
     return parsed, iterator
 
-'''
-alom_system_temperature = gauge "Current temperature of system sensors"
-{
-    sensor="MB/T_AMB"
-    status="OK"
-}
-alom_indicator_status = bool "Whether each indicator LED is lit"
-{
-    indicator="SYS/LOCATE"
-}
-alom_fan_speed = gauge "Current speed of cooling fans"
-{
-    sensor="FT0/F0"
-    status="OK"
-}
-alom_voltage_status = gauge "Current voltage measured across the motherboard"
-{
-    sensor="MB/V_+12V"
-    status="OK"
-}
-alom_system_load = gauge "Current system load in amps"
-{
-    sensor="MB/I_VCORE"
-    status="OK"
-}
-alom_sensor_status = bool "Status of sensors"
-{
-    sensor="MB/BAT/V_BAT"
-}
-alom_power_supply_status = bool "Status of power supplies"
-{
-    supply="PS0"
-}
-'''
+def parse_showenvironment(lines: List[str]) -> dict:
+    result = defaultdict(dict)
+    result['power']['system'] = 1  # Assume power on until we hit a "System power is off" line
 
-with open(sys.argv[1]) as f:
-    lines = [line.strip() for line in f.read().splitlines()]
+    iterator = 0
+    while iterator < len(lines):
+        line = lines[iterator]
+        if re.search(':$', line):
+            header = line.rstrip(':')
+            #print(f'Header: {header}')
+            # Special case- several boolean columns with no divider
+            if header == 'System Indicator Status':
+                col_headers = lines[iterator+2].split()
+                col_values = lines[iterator+3].split()
+                for idx, hdr in enumerate(col_headers):
+                    result['indicator'][hdr] = 0 if col_values[idx] == 'OFF' else 1
+                iterator += 3 # skip the table body
+                continue
+            # The rest are all proper tables
+            table, new_index = parse_table(lines, iterator)
+            result[header_to_category[header]] = table
+            result['power'][header_to_category[header]] = 1
+            iterator = new_index  # This is the end of the table and should still be incremented below
+        elif 'cannot be displayed when System power is off' in line:
+            result['power']['system'] = 0
+            header = ' '.join(line.split()[:3])
+            result['power'][header_to_category[header]] = 0
+        iterator += 1
 
-result = defaultdict(dict)
-result['power']['system'] = 1  # Assume power on until we hit a "System power is off" line
-
-iterator = 0
-while iterator < len(lines):
-    line = lines[iterator]
-    if re.search(':$', line):
-        header = line.rstrip(':')
-        #print(f'Header: {header}')
-        # Special case- several boolean columns with no divider
-        if header == 'System Indicator Status':
-            col_headers = lines[iterator+2].split()
-            col_values = lines[iterator+3].split()
-            for idx, hdr in enumerate(col_headers):
-                result['indicator'][hdr] = 0 if col_values[idx] == 'OFF' else 1
-            iterator += 3 # skip the table body
-            continue
-        # The rest are all proper tables
-        table, new_index = parse_table(lines, iterator)
-        result[header_to_category[header]] = table
-        result['power'][header_to_category[header]] = 1
-        iterator = new_index  # This is the end of the table and should still be incremented below
-    elif 'cannot be displayed when System power is off' in line:
-        result['power']['system'] = 0
-        header = ' '.join(line.split()[:3])
-        result['power'][header_to_category[header]] = 0
-
-    iterator += 1
-
-print(json.dumps(result, indent=2))
+    #print(json.dumps(result, indent=2))
+    return result
