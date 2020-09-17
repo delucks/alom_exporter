@@ -5,6 +5,21 @@ import json
 import sys
 import re
 
+# Names from environmental report -> keys in result data / metric name fragments
+header_to_category = {
+    'System Indicator Status': 'indicator',
+    'System Temperatures (Temperatures in Celsius)': 'temperature',
+    'Fans (Speeds Revolution Per Minute)': 'fans',
+    'Fan Status information': 'fans',
+    'Voltage sensors (in Volts)': 'voltage',
+    'Voltage Rail Status': 'voltage',
+    'System Load (in amps)': 'load',
+    'System Load information': 'load',
+    'Current sensors': 'current',
+    'Current sensor information': 'current',
+    'Power Supplies': 'psu',
+}
+
 def atoi(table_data: str) -> float:
     '''Convert a value from environmental status table into numeric
     representation: a float for float values, 0/1 for binary values'''
@@ -88,11 +103,9 @@ result['power']['system'] = 1  # Assume power on until we hit a "System power is
 iterator = 0
 while iterator < len(lines):
     line = lines[iterator]
-    if re.match('=* Environmental Status =*', line):
-        ...
-    elif re.search(':$', line):
+    if re.search(':$', line):
         header = line.rstrip(':')
-        print(f'Header: {header}')
+        #print(f'Header: {header}')
         # Special case- several boolean columns with no divider
         if header == 'System Indicator Status':
             col_headers = lines[iterator+2].split()
@@ -103,22 +116,13 @@ while iterator < len(lines):
             continue
         # The rest are all proper tables
         table, new_index = parse_table(lines, iterator+2)
-        if header == 'System Temperatures (Temperatures in Celsius)':
-            result['temperature'] = table
-        elif header == 'Fans (Speeds Revolution Per Minute)':
-            result['fans'] = table
-        elif header == 'Voltage sensors (in Volts)':
-            result['voltage'] = table
-        elif header == 'System Load (in amps)':
-            result['load'] = table
-        elif header == 'Current sensors':
-            result['current'] = table
-        elif header == 'Power Supplies':
-            result['psu'] = table
+        result[header_to_category[header]] = table
+        result['power'][header_to_category[header]] = 1
         iterator = new_index
     elif 'cannot be displayed when System power is off' in line:
         result['power']['system'] = 0
-        #print('Power off status for ' + ' '.join(line.split()[:3]))
+        header = ' '.join(line.split()[:3])
+        result['power'][header_to_category[header]] = 0
 
     iterator += 1
 
