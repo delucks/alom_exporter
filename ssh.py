@@ -1,60 +1,95 @@
+import logging
 import time
 from contextlib import suppress
 
 import paramiko
 import yaml
 
+log = logging.getLogger(__name__)
 
-with open('config.yaml', 'r') as stream:
-    config = yaml.safe_load(stream)
-ilom_authentication_delay = 2
-ilom_environment_delay = 2
 
-client = paramiko.client.SSHClient()
-#transport = paramiko.Transport((config['ilom_ssh_address'], 22))
-#opts = transport.get_security_options()
-#print(opts.kex)
-#print(opts.key_types)
-#print(opts.ciphers)
-client.load_system_host_keys()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+class ILOMConnection:
+    '''ILOMConnection wraps a paramiko.client to authenticate with Sun Integrated Lights-Out Management via SSH.
+    The class is used as a context manager to properly tear down the SSH connection.
+    Initial authentication takes some time (~5s) but subsequent calls are relatively quick.
+    '''
+    def __init__(self, config_path='config.yaml'):
+        with open(config_path, 'r') as stream:
+            config = yaml.safe_load(stream)
+        if not 'ilom_authentication_delay' in config:
+            config['ilom_authentication_delay'] = 2
+        if not 'ilom_environment_delay' in config:
+            config['ilom_environment_delay'] = 2
+        self.config = config
+        self.client = None
+        self.channel = None
 
-# Authentication happens with the "none" method
-with suppress(paramiko.ssh_exception.AuthenticationException):
-    client.connect(config['ilom_ssh_address'], username=config['ilom_ssh_username'], password=config['ilom_ssh_password'], look_for_keys=False)
-client.get_transport().auth_none(config['ilom_ssh_username'])
+    def __enter__(self):
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-channel = client.invoke_shell()
+        # Authentication happens with the "none" method, which is not officially supported.
+        # https://github.com/paramiko/paramiko/issues/890
+        with suppress(paramiko.ssh_exception.AuthenticationException):
+            client.connect(
+                self.config['ilom_ssh_address'],
+                username=self.config['ilom_ssh_username'],
+                password=self.config['ilom_ssh_password'],
+                look_for_keys=False
+            )
+        client.get_transport().auth_none(self.config['ilom_ssh_username'])
+        self.client = client
+        self.channel = client.invoke_shell()
 
-buf = b''
-while not buf.startswith(b'Please login:'):
-    buf = channel.recv(10000)
-    print(buf.decode('utf-8'))
+        if self.authenticate():
+            return self
+        else:
+            self.client.close()
+            raise Exception('ILOM authentication failed')
 
-sent = channel.send(config['ilom_ssh_username']+'\n')
-print(f'Sent {sent} bytes, sleeping {ilom_authentication_delay} seconds')
-time.sleep(ilom_authentication_delay)
-buf = channel.recv(10000)
-trimmed = buf[sent+1:]
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.client.close()
 
-if not trimmed.startswith(b'Please Enter password:'):
-    print(f'Authentication failed before sending password {buf}')
+    def authenticate(self) -> bool:
+        delay = self.config['ilom_authentication_delay']
+        buf = b''
+        while not buf.startswith(b'Please login:'):
+            buf = self.channel.recv(10000)
+            log.debug(buf.decode('utf-8'))
+        sent = self.channel.send(self.config['ilom_ssh_username']+'\n')
+        log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
+        time.sleep(delay)
+        buf = self.channel.recv(10000)
+        trimmed = buf[sent+1:]
 
-print(f'{buf}')
-sent = channel.send(config['ilom_ssh_password']+'\n')
-print(f'Sent {sent} bytes, sleeping {ilom_authentication_delay} seconds')
-time.sleep(ilom_authentication_delay)
-buf = channel.recv(10000)
-buf = buf[sent+1:]
-print(f'{buf}')
-if b'sc> ' in buf:
-    print('Authentication succeeded!')
+        if not trimmed.startswith(b'Please Enter password:'):
+            log.warning(f'Authentication failed before sending password {buf}')
+            return False
 
-sent = channel.send('showenvironment\n')
-print(f'Sent {sent} bytes, sleeping for {ilom_environment_delay} seconds')
-time.sleep(ilom_environment_delay)
-buf = channel.recv(10000)
-buf = buf[sent+1:]
-print(f'{buf}')
+        log.debug(f'{buf}')
+        sent = self.channel.send(self.config['ilom_ssh_password']+'\n')
+        log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
+        time.sleep(delay)
+        buf = self.channel.recv(10000)
+        buf = buf[sent+1:]
+        log.debug(f'{buf}')
 
-client.close()
+        if b'sc> ' in buf:
+            log.info('Authentication succeeded!')
+            return True
+        return False
+
+    def showenvironment(self) -> str:
+        delay = self.config['ilom_environment_delay']
+        sent = self.channel.send('showenvironment\n')
+        log.info(f'Sent {sent} bytes, sleeping for {delay} seconds')
+        time.sleep(delay)
+        buf = self.channel.recv(10000)
+        buf = buf[sent+1:]
+        log.debug(f'{buf}')
+        return buf.decode('utf-8')
+
+if __name__ == '__main__':
+    with ILOMConnection() as connection:
+        print(connection.showenvironment())
