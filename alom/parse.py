@@ -10,6 +10,7 @@ header_to_category = {
     'System Indicator Status': 'indicator',
     'System Temperatures (Temperatures in Celsius)': 'temperature',
     'Fans (Speeds Revolution Per Minute)': 'fans',
+    'Fans Status': 'fans',
     'Fan Status information': 'fans',
     'Voltage sensors (in Volts)': 'voltage',
     'Voltage Rail Status': 'voltage',
@@ -27,7 +28,8 @@ header_to_category = {
 custom_table_values = {
     'OFF': 0.0,
     'OK': 1.0,
-    'STANDBY/BLINK': 1.0,
+    'NOT PRESENT': 0.0,
+    '--': -1.0,
 }
 
 def atoi(table_data: str) -> float:
@@ -56,6 +58,10 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
     while not re.search('^[A-Z]', line):
         iterator += 1
         line = lines[iterator]
+    if line == 'Fans (Speeds Revolution Per Minute):':
+        # The fans header on T2000 includes an extra line before the table header
+        iterator += 1
+        line = lines[iterator]
     header = line.split()
     # There is always a divider line after the header, so we can skip that safely
     iterator += 2
@@ -70,7 +76,12 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
             iterator += 1
             continue
         data = line.split()
-        print(f'{header}\t{iterator}\n{data}')
+        # Using .split() is the most reliable method for most tables, as the headers do not always match up with the values.
+        # However, for System Disks, this method results in the token "NOT PRESENT" being broken up.
+        for idx, element in enumerate(data):
+            if element == 'PRESENT' and data[idx-1] == 'NOT':
+                data = data[0:idx-1] + ['NOT PRESENT'] + data[idx+1:]
+        #print(f'{header}\t{iterator}\n{data}')
         for idx, hdr in enumerate(header):
             # Skip first column which describes the (sensor/supply ID) key
             if idx == 0:
