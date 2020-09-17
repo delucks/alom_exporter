@@ -20,17 +20,22 @@ header_to_category = {
     'Power Supplies': 'psu',
 }
 
+# Non-numeric table values are mapped to floats with this dictionary.
+# If your data contains a different value, please file an issue with the output of "showenvironment" and some information about your hardware.
+custom_table_values = {
+    'OFF': 0.0,
+    'OK': 1.0,
+}
+
 def atoi(table_data: str) -> float:
     '''Convert a value from environmental status table into numeric
     representation: a float for float values, 0/1 for binary values'''
     try:
         return float(table_data)
-    except ValueError:
-        # TODO include other error states here
-        if table_data == 'OFF':
-            return 0.0
-        else:
-            return 1.0
+    except ValueError as e:
+        if table_data in custom_table_values:
+            return custom_table_values[table_data]
+        raise Exception(f'Value {table_data} is currently unhandled by the ALOM parser') from e
 
 def parse_table(lines: List[str], start_index: int) -> (dict, int):
     '''Parse a full table from environmental status report, starting with the header.

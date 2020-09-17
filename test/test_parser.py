@@ -1,7 +1,14 @@
 import pytest
 
-from alom.parse import parse_showenvironment
+from alom.parse import parse_showenvironment, atoi
 
+
+def test_atoi():
+    assert atoi('OK') == 1.0
+    assert atoi('OFF') == 0.0
+    assert atoi('8923') == 8923
+    assert atoi('-1') == -1
+    assert atoi('213.1280') == 213.1280
 
 def test_t1000_on_0(sample_session):
     test = sample_session('test/t1000_on_0.txt')
