@@ -8,18 +8,18 @@ import yaml
 log = logging.getLogger(__name__)
 
 
-class ILOMConnection:
-    '''ILOMConnection wraps a paramiko.client to authenticate with Sun Integrated Lights-Out Management via SSH.
+class ALOMConnection:
+    '''ALOMConnection wraps a paramiko.client to authenticate with Sun Integrated Lights-Out Management via SSH.
     The class is used as a context manager to properly tear down the SSH connection.
     Initial authentication takes some time (~5s) but subsequent calls are relatively quick.
     '''
     def __init__(self, config_path='config.yaml'):
         with open(config_path, 'r') as stream:
             config = yaml.safe_load(stream)
-        if not 'ilom_authentication_delay' in config:
-            config['ilom_authentication_delay'] = 2
-        if not 'ilom_environment_delay' in config:
-            config['ilom_environment_delay'] = 2
+        if not 'alom_authentication_delay' in config:
+            config['alom_authentication_delay'] = 2
+        if not 'alom_environment_delay' in config:
+            config['alom_environment_delay'] = 2
         self.config = config
         self.client = None
         self.channel = None
@@ -33,12 +33,12 @@ class ILOMConnection:
         # https://github.com/paramiko/paramiko/issues/890
         with suppress(paramiko.ssh_exception.AuthenticationException):
             client.connect(
-                self.config['ilom_ssh_address'],
-                username=self.config['ilom_ssh_username'],
-                password=self.config['ilom_ssh_password'],
+                self.config['alom_ssh_address'],
+                username=self.config['alom_ssh_username'],
+                password=self.config['alom_ssh_password'],
                 look_for_keys=False
             )
-        client.get_transport().auth_none(self.config['ilom_ssh_username'])
+        client.get_transport().auth_none(self.config['alom_ssh_username'])
         self.client = client
         self.channel = client.invoke_shell()
 
@@ -46,18 +46,18 @@ class ILOMConnection:
             return self
         else:
             self.client.close()
-            raise Exception('ILOM authentication failed')
+            raise Exception('ALOM authentication failed')
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.client.close()
 
     def authenticate(self) -> bool:
-        delay = self.config['ilom_authentication_delay']
+        delay = self.config['alom_authentication_delay']
         buf = b''
         while not buf.startswith(b'Please login:'):
             buf = self.channel.recv(10000)
             log.debug(buf.decode('utf-8'))
-        sent = self.channel.send(self.config['ilom_ssh_username']+'\n')
+        sent = self.channel.send(self.config['alom_ssh_username']+'\n')
         log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
@@ -68,7 +68,7 @@ class ILOMConnection:
             return False
 
         log.debug(f'{buf}')
-        sent = self.channel.send(self.config['ilom_ssh_password']+'\n')
+        sent = self.channel.send(self.config['alom_ssh_password']+'\n')
         log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
@@ -81,7 +81,7 @@ class ILOMConnection:
         return False
 
     def showenvironment(self) -> str:
-        delay = self.config['ilom_environment_delay']
+        delay = self.config['alom_environment_delay']
         sent = self.channel.send('showenvironment\n')
         log.info(f'Sent {sent} bytes, sleeping for {delay} seconds')
         time.sleep(delay)
@@ -91,5 +91,5 @@ class ILOMConnection:
         return buf.decode('utf-8')
 
 if __name__ == '__main__':
-    with ILOMConnection() as connection:
+    with ALOMConnection() as connection:
         print(connection.showenvironment())

@@ -73,35 +73,35 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
     return parsed, iterator
 
 '''
-ilom_system_temperature = gauge "Current temperature of system sensors"
+alom_system_temperature = gauge "Current temperature of system sensors"
 {
     sensor="MB/T_AMB"
     status="OK"
 }
-ilom_indicator_status = bool "Whether each indicator LED is lit"
+alom_indicator_status = bool "Whether each indicator LED is lit"
 {
     indicator="SYS/LOCATE"
 }
-ilom_fan_speed = gauge "Current speed of cooling fans"
+alom_fan_speed = gauge "Current speed of cooling fans"
 {
     sensor="FT0/F0"
     status="OK"
 }
-ilom_voltage_status = gauge "Current voltage measured across the motherboard"
+alom_voltage_status = gauge "Current voltage measured across the motherboard"
 {
     sensor="MB/V_+12V"
     status="OK"
 }
-ilom_system_load = gauge "Current system load in amps"
+alom_system_load = gauge "Current system load in amps"
 {
     sensor="MB/I_VCORE"
     status="OK"
 }
-ilom_sensor_status = bool "Status of sensors"
+alom_sensor_status = bool "Status of sensors"
 {
     sensor="MB/BAT/V_BAT"
 }
-ilom_power_supply_status = bool "Status of power supplies"
+alom_power_supply_status = bool "Status of power supplies"
 {
     supply="PS0"
 }
