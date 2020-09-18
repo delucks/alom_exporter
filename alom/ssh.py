@@ -25,6 +25,9 @@ class ALOMConnection:
         self.channel = None
 
     def __enter__(self):
+        for required_property in ['alom_ssh_address', 'alom_ssh_username', 'alom_ssh_password']:
+            if not required_property in self.config:
+                raise Exception('Property {required_property} not found in configuration file')
         client = paramiko.client.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
