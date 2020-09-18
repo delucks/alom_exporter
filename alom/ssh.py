@@ -13,7 +13,7 @@ class ALOMConnection:
     The class is used as a context manager to properly tear down the SSH connection.
     Initial authentication takes some time (~5s) but subsequent calls are relatively quick.
     '''
-    def __init__(self, config_path='config.yaml'):
+    def __init__(self, config_path):
         with open(config_path, 'r') as stream:
             config = yaml.safe_load(stream)
         if not 'alom_authentication_delay' in config:
