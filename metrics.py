@@ -8,8 +8,8 @@ from alom.ssh import ALOMConnection
 
 
 class ALOMCollector:
-    def __init__(self, config_path='config.yaml'):
-        self.config_path = config_path
+    def __init__(self, connection):
+        self.connection = connection
 
     def collect(self):
         metrics = {}
@@ -52,11 +52,8 @@ class ALOMCollector:
         metrics['heartbeat'] = GaugeMetricFamily('alom_ok', 'Scraping status from ALOM')
         metrics['power'] = GaugeMetricFamily('alom_system_power', 'System power status')
         try:
-            with open('test/t1000_on_0.txt', 'r') as fh:
-                env = fh.read()
             # This is working, but stubbed until I'm confident in the metrics code here
-            #with ALOMConnection(self.config_path) as connection:
-            #    env = connection.showenvironment()
+            env = self.connection.showenvironment()
             trimmed = [line.strip() for line in env.splitlines()]
             data = parse_showenvironment(trimmed)
             metrics['heartbeat'].add_metric([], 1)
@@ -84,7 +81,9 @@ class ALOMCollector:
             yield metric
 
 if __name__ == '__main__':
-    REGISTRY.register(ALOMCollector())
-    start_http_server(9123)
-    while True:
-        time.sleep(1)
+    config_path = 'config.yaml'
+    with ALOMConnection(config_path) as connection:
+        REGISTRY.register(ALOMCollector(connection))
+        start_http_server(9123)
+        while True:
+            time.sleep(1)

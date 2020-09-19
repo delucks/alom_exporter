@@ -19,7 +19,8 @@ class ALOMConnection:
         if not 'alom_authentication_delay' in config:
             config['alom_authentication_delay'] = 2
         if not 'alom_environment_delay' in config:
-            config['alom_environment_delay'] = 2
+            # This is the lowest value which seems to consistently work
+            config['alom_environment_delay'] = 0.35
         self.config = config
         self.client = None
         self.channel = None
@@ -92,7 +93,3 @@ class ALOMConnection:
         buf = buf[sent+1:]
         log.debug(f'{buf}')
         return buf.decode('utf-8')
-
-if __name__ == '__main__':
-    with ALOMConnection() as connection:
-        print(connection.showenvironment())
