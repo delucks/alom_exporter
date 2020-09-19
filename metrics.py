@@ -1,3 +1,4 @@
+import argparse
 import time
 
 from prometheus_client import start_http_server, Enum
@@ -81,9 +82,12 @@ class ALOMCollector:
             yield metric
 
 if __name__ == '__main__':
-    config_path = 'config.yaml'
-    with ALOMConnection(config_path) as connection:
+    p = argparse.ArgumentParser()
+    p.add_argument('-c', '--config', help='Path to configuration file', default='config.yaml')
+    p.add_argument('--port', help='Port to bind', default=9897)
+    args = p.parse_args()
+    with ALOMConnection(args.config) as connection:
         REGISTRY.register(ALOMCollector(connection))
-        start_http_server(9123)
+        start_http_server(args.port)
         while True:
-            time.sleep(1)
+            time.sleep(10)
