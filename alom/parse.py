@@ -5,6 +5,8 @@ import json
 import sys
 import re
 
+from alom.exceptions import PartialResponseException
+
 # Names from environmental report -> keys in result data / metric name fragments
 header_to_category = {
     'System Indicator Status': 'indicator',
@@ -87,7 +89,11 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
             if idx == 0:
                 continue
             # Use first column as the key for this data
-            parsed[data[0]][hdr] = atoi(data[idx])
+            try:
+                parsed[data[0]][hdr] = atoi(data[idx])
+            except IndexError as e:
+                # partially formed message causes columns to be split
+                raise PartialResponseException() from e
         iterator += 1
     return parsed, iterator
 

@@ -6,6 +6,7 @@ from prometheus_client.core import GaugeMetricFamily, REGISTRY
 
 from alom.parse import parse_showenvironment
 from alom.ssh import ALOMConnection
+from alom.exceptions import PartialResponseException
 
 
 class ALOMCollector:
@@ -58,6 +59,12 @@ class ALOMCollector:
             trimmed = [line.strip() for line in env.splitlines()]
             data = parse_showenvironment(trimmed)
             metrics['heartbeat'].add_metric([], 1)
+        except PartialResponseException as e:
+            # A partially formed response causes the heartbeat metric to drop and the timer for returning data to increase
+            metrics['heartbeat'].add_metric([], 0)
+            self.connection.last_measurement_on = True
+            log.warning('Increasing command wait due to partially formed response')
+            yield metrics['heartbeat']
         except Exception as e:
             metrics['heartbeat'].add_metric([], 0)
             raise  # Gradually this should become a logging statement so the daemon doesn't crash.

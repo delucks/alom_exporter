@@ -19,11 +19,18 @@ class ALOMConnection:
         if not 'alom_authentication_delay' in config:
             config['alom_authentication_delay'] = 2
         if not 'alom_environment_delay' in config:
-            # This is the lowest value which seems to consistently work
-            config['alom_environment_delay'] = 0.35
+            # Range 0.35 for a powered off system to 3.0 for a powered on system
+            config['alom_environment_delay'] = 3.00
         self.config = config
         self.client = None
         self.channel = None
+        self.last_measurement_on = True
+
+    def _get_delay(self):
+        if self.last_measurement_on:
+            return self.config['alom_environment_delay']
+        else:
+            return 0.35
 
     def __enter__(self):
         for required_property in ['alom_ssh_address', 'alom_ssh_username', 'alom_ssh_password']:
@@ -85,11 +92,14 @@ class ALOMConnection:
         return False
 
     def showenvironment(self) -> str:
-        delay = self.config['alom_environment_delay']
+        delay = self._get_delay()
         sent = self.channel.send('showenvironment\n')
         log.info(f'Sent {sent} bytes, sleeping for {delay} seconds')
         time.sleep(delay)
-        buf = self.channel.recv(10000)
+        buf = self.channel.recv(40000)
         buf = buf[sent+1:]
-        log.debug(f'{buf}')
-        return buf.decode('utf-8')
+        from_the_binary = buf.decode('utf-8')
+        log.debug(from_the_binary)
+        # Adjust next recv delay based on power-off status
+        self.last_measurement_on = 'power is off' not in from_the_binary
+        return from_the_binary
