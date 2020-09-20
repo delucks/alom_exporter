@@ -40,6 +40,7 @@ class ALOMConnection:
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+        log.debug(f'Connecting to {self.config["alom_ssh_address"]} over SSH')
         # Authentication happens with the "none" method, which is not officially supported.
         # https://github.com/paramiko/paramiko/issues/890
         with suppress(paramiko.ssh_exception.AuthenticationException):
@@ -49,11 +50,14 @@ class ALOMConnection:
                 password=self.config['alom_ssh_password'],
                 look_for_keys=False
             )
+        log.debug(f'Authenticating as {self.config["alom_ssh_username"]}')
         client.get_transport().auth_none(self.config['alom_ssh_username'])
         self.client = client
+        log.debug('Requesting pty')
         self.channel = client.invoke_shell()
 
         if self.authenticate():
+            log.debug('Connection successful')
             return self
         else:
             self.client.close()

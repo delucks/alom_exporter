@@ -1,4 +1,5 @@
 import argparse
+import logging
 import time
 
 from prometheus_client import start_http_server, Enum
@@ -92,7 +93,10 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('-c', '--config', help='Path to configuration file', default='config.yaml')
     p.add_argument('--port', help='Port to bind', default=9897)
+    p.add_argument('-d', '--debug', help='Enable debug logging', action='store_true')
     args = p.parse_args()
+    level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=level)
     with ALOMConnection(args.config) as connection:
         REGISTRY.register(ALOMCollector(connection))
         start_http_server(args.port)
