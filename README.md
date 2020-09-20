@@ -14,6 +14,10 @@ alom_ssh_password: changeme
 
 Since the `showenvironment` command doesn't require administrative privileges, I'd recommend setting up a dedicated user for alom_exporter to adhere to the principle of least privilege.
 
+## Installation
+
+Install via pip, `pip install alom-exporter` - and note the package name uses a dash. The daemon can be invoked with `alom_exporter`.
+
 ## Example
 
 This was generated from example output of a Sun T2000 server. Python metrics are omitted for brevity.
