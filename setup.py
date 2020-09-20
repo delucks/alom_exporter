@@ -8,12 +8,13 @@ with open('requirements.txt') as f:
 with open('README.md', 'r') as f:
     long_desc = f.read()
 
-version = "0.0.4"
+version = "0.0.5"
 
 setup(
     name='alom_exporter',
     description='Prometheus exporter for Sun ALOM statistics',
     long_description=long_desc,
+    long_description_content_type="text/markdown",
     version=version,
     install_requires=reqs,
     tests_require=test_require,
