@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 with open('README.md', 'r') as f:
     long_desc = f.read()
 
-version = "0.0.2"
+version = "0.0.3"
 
 setup(
     name='alom_exporter',
@@ -24,7 +24,7 @@ setup(
             'alom_exporter = alom.metrics:main'
         ]
     },
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     author='delucks',
     author_email='me@jamieluck.com',
     license='GPLv3',
