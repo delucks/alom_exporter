@@ -81,7 +81,7 @@ class ALOMCollector:
         for metric in metrics.values():
             yield metric
 
-if __name__ == '__main__':
+def main():
     p = argparse.ArgumentParser()
     p.add_argument('-c', '--config', help='Path to configuration file', default='config.yaml')
     p.add_argument('--port', help='Port to bind', default=9897)
@@ -91,3 +91,6 @@ if __name__ == '__main__':
         start_http_server(args.port)
         while True:
             time.sleep(10)
+
+if __name__ == '__main__':
+    main()
