@@ -34,9 +34,10 @@ custom_table_values = {
     '--': -1.0,
 }
 
+
 def atoi(table_data: str) -> float:
-    '''Convert a value from environmental status table into numeric
-    representation: a float for float values, 0/1 for binary values'''
+    """Convert a value from environmental status table into numeric
+    representation: a float for float values, 0/1 for binary values"""
     try:
         return float(table_data)
     except ValueError as e:
@@ -44,18 +45,19 @@ def atoi(table_data: str) -> float:
             return custom_table_values[table_data]
         raise Exception(f'Value {table_data} is currently unhandled by the ALOM parser') from e
 
+
 def parse_table(lines: List[str], start_index: int) -> (dict, int):
-    '''Parse a full table from environmental status report, starting with the header.
+    """Parse a full table from environmental status report, starting with the header.
     Return the table as a nested mapping with the first column (sensor name) as the key for
     each row's values. Also track & return the line count read to avoid double parsing.
 
     Parameters:
         lines: Full contents of environmental status
         start_index: Index of table header
-    '''
+    """
     parsed = defaultdict(dict)
     # Find column header line: next line starting with a capital alphanum after start_index
-    iterator = start_index+1
+    iterator = start_index + 1
     line = lines[iterator]
     while not re.search('^[A-Z]', line):
         iterator += 1
@@ -81,9 +83,9 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
         # Using .split() is the most reliable method for most tables, as the headers do not always match up with the values.
         # However, for System Disks, this method results in the token "NOT PRESENT" being broken up.
         for idx, element in enumerate(data):
-            if element == 'PRESENT' and data[idx-1] == 'NOT':
-                data = data[0:idx-1] + ['NOT PRESENT'] + data[idx+1:]
-        #print(f'{header}\t{iterator}\n{data}')
+            if element == 'PRESENT' and data[idx - 1] == 'NOT':
+                data = data[0 : idx - 1] + ['NOT PRESENT'] + data[idx + 1 :]
+        # print(f'{header}\t{iterator}\n{data}')
         for idx, hdr in enumerate(header):
             # Skip first column which describes the (sensor/supply ID) key
             if idx == 0:
@@ -97,6 +99,7 @@ def parse_table(lines: List[str], start_index: int) -> (dict, int):
         iterator += 1
     return parsed, iterator
 
+
 def _parse_indicator_row(header_line: str, values_line: str) -> dict:
     result = {}
     # Column values can be separated by spaces so we need to find the start index of each column
@@ -105,35 +108,37 @@ def _parse_indicator_row(header_line: str, values_line: str) -> dict:
         indexes.append(header_line.index(header))
     # Manually space and trim each value with the indexes of the headers
     values = [
-        values_line[0:indexes[1]].strip(),
-        values_line[indexes[1]:indexes[2]].strip(),
-        values_line[indexes[2]:].strip(),
+        values_line[0 : indexes[1]].strip(),
+        values_line[indexes[1] : indexes[2]].strip(),
+        values_line[indexes[2] :].strip(),
     ]
     for idx, hdr in enumerate(header_line.split()):
         result[hdr] = values[idx]
     return result
 
+
 def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, int):
-    '''Parse a "System Indicator Status" table into a dict mapping indicator IDs to states.
+    """Parse a "System Indicator Status" table into a dict mapping indicator IDs to states.
     Return the new index of the iterator along with the resulting data.
-    '''
-    iterator = start_index+2  # Skip table header and first divider
+    """
+    iterator = start_index + 2  # Skip table header and first divider
     # First table always exists, and in some cases there are additional tables
-    result = _parse_indicator_row(lines[iterator], lines[iterator+1])
+    result = _parse_indicator_row(lines[iterator], lines[iterator + 1])
     iterator += 2  # Skip first table
     while iterator < len(lines):
         # An empty line means we've hit the end of this table
-        if lines[iterator] == '' or lines[iterator+1] == '':
+        if lines[iterator] == '' or lines[iterator + 1] == '':
             break
         # A divider followed by a capital letter in first position means we've found another row
-        if lines[iterator].startswith('----') and re.search('^[A-Z]', lines[iterator+1]):
+        if lines[iterator].startswith('----') and re.search('^[A-Z]', lines[iterator + 1]):
             iterator += 1
             # Merge in additional rows
-            next_row = _parse_indicator_row(lines[iterator], lines[iterator+1])
+            next_row = _parse_indicator_row(lines[iterator], lines[iterator + 1])
             for k, v in next_row.items():
                 result[k] = v
             iterator += 2  # Skip this table
     return result, iterator
+
 
 def parse_showenvironment(lines: List[str]) -> dict:
     result = defaultdict(dict)
@@ -144,7 +149,7 @@ def parse_showenvironment(lines: List[str]) -> dict:
         line = lines[iterator]
         if re.search(':$', line):
             header = line.rstrip(':')
-            #print(f'Header: {header}')
+            # print(f'Header: {header}')
             # Special case- several boolean columns with no divider
             if header == 'System Indicator Status':
                 indicators, new_index = parse_system_indicator_status(lines, iterator)
@@ -162,5 +167,5 @@ def parse_showenvironment(lines: List[str]) -> dict:
             result['power'][header_to_category[header]] = 0
         iterator += 1
 
-    #print(json.dumps(result, indent=2))
+    # print(json.dumps(result, indent=2))
     return result

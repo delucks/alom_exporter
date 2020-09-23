@@ -10,6 +10,7 @@ def test_atoi():
     assert atoi('-1') == -1
     assert atoi('213.1280') == 213.1280
 
+
 def test_t1000_on_0(sample_session):
     test = sample_session('test/t1000_on_0.txt')
     result = parse_showenvironment(test)
@@ -50,6 +51,7 @@ def test_t1000_on_0(sample_session):
     assert result['current']['MB/BAT/V_BAT']['Status'] == 1
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1
+
 
 def test_t1000_on_1(sample_session):
     test = sample_session('test/t1000_on_1.txt')
@@ -92,6 +94,7 @@ def test_t1000_on_1(sample_session):
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1
 
+
 def test_t1000_on_docs_example(sample_session):
     test = sample_session('test/t1000_on_docs_example.txt')
     result = parse_showenvironment(test)
@@ -133,6 +136,7 @@ def test_t1000_on_docs_example(sample_session):
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1
 
+
 def test_t1000_off(sample_session):
     test = sample_session('test/t1000_off.txt')
     result = parse_showenvironment(test)
@@ -154,6 +158,7 @@ def test_t1000_off(sample_session):
     assert result['power']['current'] == 0
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1
+
 
 def test_t2000_off(sample_session):
     test = sample_session('test/t2000_off_docs_example.txt')
@@ -182,6 +187,7 @@ def test_t2000_off(sample_session):
     # Power supplies
     assert result['psu']['PS0']['Status'] == 1
     assert result['psu']['PS1']['Status'] == 1
+
 
 def test_t2000_on(sample_session):
     test = sample_session('test/t2000_on_docs_example.txt')

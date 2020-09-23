@@ -9,10 +9,11 @@ log = logging.getLogger(__name__)
 
 
 class ALOMConnection:
-    '''ALOMConnection wraps a paramiko.client to authenticate with Sun Integrated Lights-Out Management via SSH.
+    """ALOMConnection wraps a paramiko.client to authenticate with Sun Integrated Lights-Out Management via SSH.
     The class is used as a context manager to properly tear down the SSH connection.
     Initial authentication takes some time (~5s) but subsequent calls are relatively quick.
-    '''
+    """
+
     def __init__(self, config_path):
         with open(config_path, 'r') as stream:
             config = yaml.safe_load(stream)
@@ -48,7 +49,7 @@ class ALOMConnection:
                 self.config['alom_ssh_address'],
                 username=self.config['alom_ssh_username'],
                 password=self.config['alom_ssh_password'],
-                look_for_keys=False
+                look_for_keys=False,
             )
         log.debug(f'Authenticating as {self.config["alom_ssh_username"]}')
         client.get_transport().auth_none(self.config['alom_ssh_username'])
@@ -72,22 +73,22 @@ class ALOMConnection:
         while not buf.startswith(b'Please login:'):
             buf = self.channel.recv(10000)
             log.debug(buf.decode('utf-8'))
-        sent = self.channel.send(self.config['alom_ssh_username']+'\n')
+        sent = self.channel.send(self.config['alom_ssh_username'] + '\n')
         log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
-        trimmed = buf[sent+1:]
+        trimmed = buf[sent + 1 :]
 
         if not trimmed.startswith(b'Please Enter password:'):
             log.warning(f'Authentication failed before sending password {buf}')
             return False
 
         log.debug(f'{buf}')
-        sent = self.channel.send(self.config['alom_ssh_password']+'\n')
+        sent = self.channel.send(self.config['alom_ssh_password'] + '\n')
         log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
-        buf = buf[sent+1:]
+        buf = buf[sent + 1 :]
         log.debug(f'{buf}')
 
         if b'sc> ' in buf:
@@ -101,7 +102,7 @@ class ALOMConnection:
         log.info(f'Sent {sent} bytes, sleeping for {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(40000)
-        buf = buf[sent+1:]
+        buf = buf[sent + 1 :]
         from_the_binary = buf.decode('utf-8')
         log.debug(from_the_binary)
         # Adjust next recv delay based on power-off status

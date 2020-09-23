@@ -17,41 +17,21 @@ class ALOMCollector:
     def collect(self):
         metrics = {}
         metrics['temperature'] = GaugeMetricFamily(
-            'alom_system_temperature',
-            'Current temperature of system sensors',
-            labels=['sensor']
+            'alom_system_temperature', 'Current temperature of system sensors', labels=['sensor']
         )
-        #metrics['indicator'] = Enum(
+        # metrics['indicator'] = Enum(
         #    'alom_indicator_status',
         #    'Status of each indicator LED',
         #    labelnames=['indicator'],
         #    states=['OFF', 'FAST BLINK', 'STANDBY BLINK']
-        #)
-        metrics['fans'] = GaugeMetricFamily(
-            'alom_fan_speed',
-            'Current speed of cooling fans in RPM',
-            labels=['sensor']
-        )
+        # )
+        metrics['fans'] = GaugeMetricFamily('alom_fan_speed', 'Current speed of cooling fans in RPM', labels=['sensor'])
         metrics['voltage'] = GaugeMetricFamily(
-            'alom_voltage_status',
-            'Current voltage at sensors across the machine',
-            labels=['sensor']
+            'alom_voltage_status', 'Current voltage at sensors across the machine', labels=['sensor']
         )
-        metrics['load'] = GaugeMetricFamily(
-            'alom_system_load',
-            'Current system load in amps',
-            labels=['sensor']
-        )
-        metrics['current'] = GaugeMetricFamily(
-            'alom_sensor_status',
-            'Status of current sensors',
-            labels=['sensor']
-        )
-        metrics['psu'] = GaugeMetricFamily(
-            'alom_power_supply_status',
-            'Status of power supplies',
-            labels=['supply']
-        )
+        metrics['load'] = GaugeMetricFamily('alom_system_load', 'Current system load in amps', labels=['sensor'])
+        metrics['current'] = GaugeMetricFamily('alom_sensor_status', 'Status of current sensors', labels=['sensor'])
+        metrics['psu'] = GaugeMetricFamily('alom_power_supply_status', 'Status of power supplies', labels=['supply'])
         metrics['heartbeat'] = GaugeMetricFamily('alom_ok', 'Scraping status from ALOM')
         metrics['power'] = GaugeMetricFamily('alom_system_power', 'System power status')
         try:
@@ -74,7 +54,7 @@ class ALOMCollector:
         for sensor, sensor_readings in data['temperature'].items():
             # XXX include sensor thresholds (Low/High Hard/Soft/Warn) if appropriate
             metrics['temperature'].add_metric([sensor], sensor_readings['Temp'])
-        #for indicator, state in data['indicator'].items():
+        # for indicator, state in data['indicator'].items():
         #    metrics['indicator'].labels(indicator).state(state)
         for fan_sensor, fan_status in data['fans'].items():
             metrics['fans'].add_metric([fan_sensor], fan_status['Speed'])
@@ -89,6 +69,7 @@ class ALOMCollector:
         for metric in metrics.values():
             yield metric
 
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('-c', '--config', help='Path to configuration file', default='config.yaml')
@@ -102,6 +83,7 @@ def main():
         start_http_server(args.port)
         while True:
             time.sleep(10)
+
 
 if __name__ == '__main__':
     main()
