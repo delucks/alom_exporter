@@ -12,7 +12,26 @@ alom_ssh_username: admin
 alom_ssh_password: changeme
 ```
 
+This file is YAML-formatted and is passed to the `alom_exporter` script with the `-c`/`--config` option.
+
 Since the `showenvironment` command doesn't require administrative privileges, I'd recommend setting up a dedicated user for alom_exporter to adhere to the principle of least privilege.
+
+For example, here's how to add an unprivileged user to an ALOM console.
+
+```
+sc> useradd exporter
+sc> userpassword exporter
+t1000-sc> userpassword exporter
+New password: *********
+
+Re-enter new password: *********
+
+sc> usershow exporter
+Username         Permissions      Password
+exporter         ----             Assigned
+```
+
+Make sure the username and password entered at the console match what you entered in the `config.yaml` file.
 
 ## Installation
 
