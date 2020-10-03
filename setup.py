@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 with open('README.md', 'r') as f:
     long_desc = f.read()
 
-version = "0.0.5"
+version = "0.0.6"
 
 setup(
     name='alom_exporter',
