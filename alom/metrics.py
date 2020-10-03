@@ -35,7 +35,6 @@ class ALOMCollector:
         metrics['heartbeat'] = GaugeMetricFamily('alom_ok', 'Scraping status from ALOM')
         metrics['power'] = GaugeMetricFamily('alom_system_power', 'System power status')
         try:
-            # This is working, but stubbed until I'm confident in the metrics code here
             env = self.connection.showenvironment()
             trimmed = [line.strip() for line in env.splitlines()]
             data = parse_showenvironment(trimmed)
