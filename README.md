@@ -21,7 +21,6 @@ For example, here's how to add an unprivileged user to an ALOM console.
 ```
 sc> useradd exporter
 sc> userpassword exporter
-t1000-sc> userpassword exporter
 New password: *********
 
 Re-enter new password: *********
