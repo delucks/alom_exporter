@@ -69,12 +69,13 @@ class ALOMConnection:
 
     def authenticate(self) -> bool:
         delay = self.config['alom_authentication_delay']
+        log.info(f'Using {delay}s authentication delay')
         buf = b''
         while not buf.startswith(b'Please login:'):
             buf = self.channel.recv(10000)
             log.debug(buf.decode('utf-8'))
         sent = self.channel.send(self.config['alom_ssh_username'] + '\n')
-        log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
+        log.debug(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
         trimmed = buf[sent + 1 :]
@@ -85,7 +86,7 @@ class ALOMConnection:
 
         log.debug(f'{buf}')
         sent = self.channel.send(self.config['alom_ssh_password'] + '\n')
-        log.info(f'Sent {sent} bytes, sleeping {delay} seconds')
+        log.debug(f'Sent {sent} bytes, sleeping {delay} seconds')
         time.sleep(delay)
         buf = self.channel.recv(10000)
         buf = buf[sent + 1 :]
@@ -94,12 +95,13 @@ class ALOMConnection:
         if b'sc> ' in buf:
             log.info('Authentication succeeded!')
             return True
+        log.warning(f'Authentication failed after sending password: {buf}')
         return False
 
     def showenvironment(self) -> str:
         delay = self._get_delay()
         sent = self.channel.send('showenvironment\n')
-        log.info(f'Sent {sent} bytes, sleeping for {delay} seconds')
+        log.info(f'Environment request waiting for {delay}s')
         time.sleep(delay)
         buf = self.channel.recv(40000)
         buf = buf[sent + 1 :]

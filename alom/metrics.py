@@ -9,6 +9,8 @@ from alom.parse import parse_showenvironment
 from alom.ssh import ALOMConnection
 from alom.exceptions import PartialResponseException
 
+log = logging.getLogger()
+
 
 class ALOMCollector:
     def __init__(self, connection):
