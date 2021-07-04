@@ -123,7 +123,12 @@ def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, 
     """
     iterator = start_index + 2  # Skip table header and first divider
     # First table always exists, and in some cases there are additional tables
-    result = _parse_indicator_row(lines[iterator], lines[iterator + 1])
+    try:
+        result = _parse_indicator_row(lines[iterator], lines[iterator + 1])
+    except IndexError as e:
+        # similar to above, this occurs when the daemon didn't recieve a full response body back from the ALOM
+        # processor. we need to flag this so we can increase the wait time
+        raise PartialResponseException() from e
     iterator += 2  # Skip first table
     while iterator < len(lines):
         # An empty line means we've hit the end of this table
