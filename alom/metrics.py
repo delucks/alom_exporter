@@ -44,7 +44,7 @@ class ALOMCollector:
         except PartialResponseException as e:
             # A partially formed response causes the heartbeat metric to drop and the timer for returning data to increase
             metrics['heartbeat'].add_metric([], 0)
-            self.connection.last_measurement_on = True
+            self.connection.increase_backoff()
             log.warning('Increasing command wait due to partially formed response')
             yield metrics['heartbeat']
         except Exception as e:

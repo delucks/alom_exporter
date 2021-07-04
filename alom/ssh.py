@@ -17,21 +17,37 @@ class ALOMConnection:
     def __init__(self, config_path):
         with open(config_path, 'r') as stream:
             config = yaml.safe_load(stream)
+        # Establish delay times. These are necessary because the ALOM processor generally
+        # runs slower than this daemon, and sending too much data at once causes it to get overwhelmed.
+        # Authentication delay doesn't need much configuration; 2s seems to work in most cases.
         if not 'alom_authentication_delay' in config:
             config['alom_authentication_delay'] = 2
-        if not 'alom_environment_delay' in config:
-            # Range 0.35 for a powered off system to 3.0 for a powered on system
-            config['alom_environment_delay'] = 3.00
+        # The delay before parsing "showenvironment" output, however, varies greatly depending
+        # on system state. 350ms works for a powered-off system, but a powered on system
+        # needs more like 3s- we use a backoff between these two values unless we know the
+        # system power state.
+        if not 'max_environment_delay' in config:
+            config['max_environment_delay'] = 3.00
+        if not 'min_environment_delay' in config:
+            config['min_environment_delay'] = 0.35
+        # if we know the system is powered on, we need to swap to the maximum wait time
+        self.last_measurement_on = False
+        # Backoff configuration for the above environment delay. By default, start with the minimum
+        # delay and double each time increase the backoff.
+        self.backoff = config['min_environment_delay']
+        self.backoff_scaling_factor = 2.0
         self.config = config
         self.client = None
         self.channel = None
-        self.last_measurement_on = True
 
-    def _get_delay(self):
-        if self.last_measurement_on:
-            return self.config['alom_environment_delay']
-        else:
-            return 0.35
+    def increase_backoff(self):
+        new_wait = self.backoff * self.backoff_scaling_factor
+        proper_wait = min(new_wait, self.config['max_environment_delay'])
+        self.backoff = proper_wait
+        return proper_wait
+
+    def get_backoff(self):
+        return self.config['max_environment_delay'] if self.last_measurement_on else self.backoff
 
     def __enter__(self):
         for required_property in ['alom_ssh_address', 'alom_ssh_username', 'alom_ssh_password']:
@@ -99,14 +115,18 @@ class ALOMConnection:
         return False
 
     def showenvironment(self) -> str:
-        delay = self._get_delay()
+        backoff = self.get_backoff()
         sent = self.channel.send('showenvironment\n')
-        log.info(f'Environment request waiting for {delay}s')
-        time.sleep(delay)
+        log.info(f'Environment request waiting for {backoff}s')
+        time.sleep(backoff)
         buf = self.channel.recv(40000)
         buf = buf[sent + 1 :]
         from_the_binary = buf.decode('utf-8')
         log.debug(from_the_binary)
-        # Adjust next recv delay based on power-off status
-        self.last_measurement_on = 'power is off' not in from_the_binary
+        # Flag any changes in power status so the backoff can be changed
+        power_is_on = 'power is off' not in from_the_binary
+        if not power_is_on and power_is_on != self.last_measurement_on:
+            # Power was just turned off! Reset the backoff logic with the minimum wait
+            self.backoff = self.config['min_environment_delay']
+        self.last_measurement_on = power_is_on
         return from_the_binary
