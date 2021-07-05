@@ -1,0 +1,11 @@
+[Unit]
+Description=Sun ALOM Prometheus Exporter
+Documentation=https://github.com/delucks/alom_exporter
+After=network-online.target
+
+[Service]
+User=alom_exporter
+ExecStart=/usr/local/bin/alom_exporter --config /etc/alom_exporter.yaml
+
+[Install]
+WantedBy=multi-user.target

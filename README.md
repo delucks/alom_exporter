@@ -36,6 +36,8 @@ Make sure the username and password entered at the console match what you entere
 
 Install via pip, `pip install alom-exporter` - and note the package name uses a dash. The daemon can be invoked with `alom_exporter`.
 
+Daemon configuration files are provided for systemd-based Linux distributions and OpenBSD- check `service/alom_exporter.service` and `service/alom_exporter.rc.sh` respectively. Both run with a daemon user that must be created before using the files. These two files assume the installation is at `/usr/local/bin/alom_exporter` with configuration at `/etc/alom_exporter.yaml` -- adjust this to fit your environment.
+
 ## Example
 
 This was generated from example output of a Sun T2000 server. Python metrics are omitted for brevity.
