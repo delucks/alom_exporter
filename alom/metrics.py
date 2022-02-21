@@ -47,6 +47,7 @@ class ALOMCollector:
             self.connection.increase_backoff()
             log.warning('Increasing command wait due to partially formed response')
             yield metrics['heartbeat']
+            return
         except Exception as e:
             metrics['heartbeat'].add_metric([], 0)
             raise  # Gradually this should become a logging statement so the daemon doesn't crash.
