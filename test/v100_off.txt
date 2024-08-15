@@ -1,0 +1,30 @@
+Fault  OFF
+Alarm1 OFF
+Alarm2 OFF
+Alarm3 ON
+
+Fans:
+1 fan1 OK standby
+
+PSUs:
+1 OK standby
+
+Temperature sensors:
+1 Enclosure 25degC OK
+
+Overheat sensors:
+1 CPU standby
+
+Circuit breakers:
+1 USB0 standby
+2 USB1 standby
+3 SCC standby
+
+Supply rails:
+1 5V standby
+2 3V3 standby
+3 +12V standby
+4 -12V standby
+5 VDD core standby
+
+

@@ -1,0 +1,30 @@
+Fault  OFF
+Alarm1 OFF
+Alarm2 OFF
+Alarm3 ON
+
+Fans:
+1 fan1 OK speed 70%
+
+PSUs:
+1 OK
+
+Temperature sensors:
+1 Enclosure 19degC OK
+
+Overheat sensors:
+1 CPU OK
+
+Circuit breakers:
+1 USB0 OK
+2 USB1 OK
+3 SCC OK
+
+Supply rails:
+1 5V OK
+2 3V3 OK
+3 +12V OK
+4 -12V OK
+5 VDD core OK
+
+

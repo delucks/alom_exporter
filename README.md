@@ -1,9 +1,9 @@
 # alom_exporter
 
-This connects to an instance of Sun Advanced Lights-Out Management (ALOM) via SSH and exports metrics about the host system to Prometheus! It has been tested on Sun T1000 and T2000 systems so far- please try it with your system and file a bug if it's not compatible. It is currently focused on `showenvironment` metrics: voltage/amperage/temperature, for safety and environmental monitoring. The system running this exporter requires the following:
+This is a Prometheus exporter which exposes statistics about the chassis of Sun Microsystems server machines that use Advanced Lights-Out Management (alom) or the integrated "lite" management (lomlite/lomlite2). A full supported list of systems is below. These metrics are generally focused on environmental monitoring & safety; they include chassis temperature, voltage, current, and more statistics depending on what sensors are in your machine. The exporter runs on a secondary system that's either connected to your Sun's management port via network or serial. The system running this exporter requires the following:
 
 - python3
-- Network access to the management interface of your target server
+- Network access to the management interface of your target server OR a serial connection to the machine's serial port
 - Credentials for logging into the target server in a configuration file, like the following:
 
 ```
@@ -31,6 +31,13 @@ exporter         ----             Assigned
 ```
 
 Make sure the username and password entered at the console match what you entered in the `config.yaml` file.
+
+## Supported Models
+
+- Sun Fire T1000
+- Sun Fire T2000
+- TODO Sun Fire V100
+- TODO Sun Fire V120
 
 ## Installation
 

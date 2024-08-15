@@ -145,6 +145,7 @@ def parse_system_indicator_status(lines: List[str], start_index: int) -> (dict, 
     return result, iterator
 
 
+# TODO rename to parse_alom to make it clear that this only supports that version of the lights-off management
 def parse_showenvironment(lines: List[str]) -> dict:
     result = defaultdict(dict)
     result['power']['system'] = 1  # Assume power on until we hit a "System power is off" line
@@ -174,3 +175,7 @@ def parse_showenvironment(lines: List[str]) -> dict:
 
     # print(json.dumps(result, indent=2))
     return result
+
+def parse_lomlite(lines: List[str]) -> dict:
+    # Parse the output of the "environment" command on machines which use lomlite/lomlite2 such as the V100
+    ...
